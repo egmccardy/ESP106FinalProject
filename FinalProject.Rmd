@@ -1,0 +1,15 @@
+---
+title: "FinalProject"
+output: html_document
+---
+```{r question geartypes}
+library(tidyverse)
+library(ggplot2)
+geartypes<-read.csv("/cloud/project/fish-catch-gear-type.csv")
+geartypesdf<-data.frame(geartypes)
+wrldgear<-filter(geartypesdf,Entity=="World")
+wide_data<- data.frame(Year=wrldgear$Year,Unknown.gear=wrldgear$Unknown.gear,other.gear=wrldgear$Other.gear,longline=wrldgear$Longline,gillnet=wrldgear$Gillnet,small.scale=wrldgear$Small.scale,purse.seine=wrldgear$Purse.seine,pelagic.trawl=wrldgear$Pelagic.trawl,bottom.trawl=wrldgear$Bottom.trawl)
+wrldgear.long<-wide_data %>%
+  pivot_longer(cols=c(Unknown.gear,other.gear,longline,gillnet,small.scale,purse.seine,pelagic.trawl,bottom.trawl),names_to = "Gear.Type",values_to = "Count")
+ ggplot(wrldgear.long,aes(x=Year,y=Count,fill=Gear.Type)) + geom_area()+labs(title="Fish Catch by Gear Type over time")+scale_fill_brewer(palette="Set2")
+```
