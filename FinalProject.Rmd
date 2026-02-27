@@ -10,10 +10,10 @@ library(ggplot2)
 geartypes<-read.csv("/cloud/project/fish-catch-gear-type.csv")
 geartypesdf<-data.frame(geartypes)
 wrldgear<-filter(geartypesdf,Entity=="World")
-wide_data<- data.frame(Year=wrldgear$Year,Unknown.gear=wrldgear$Unknown.gear,other.gear=wrldgear$Other.gear,longline=wrldgear$Longline,gillnet=wrldgear$Gillnet,small.scale=wrldgear$Small.scale,purse.seine=wrldgear$Purse.seine,pelagic.trawl=wrldgear$Pelagic.trawl,bottom.trawl=wrldgear$Bottom.trawl)
+wide_data<- data.frame(Year=wrldgear$Year,Unknown.Gear=wrldgear$Unknown.gear,other.gear=wrldgear$Other.gear,longline=wrldgear$Longline,gillnet=wrldgear$Gillnet,small.scale=wrldgear$Small.scale,purse.seine=wrldgear$Purse.seine,pelagic.trawl=wrldgear$Pelagic.trawl,bottom.trawl=wrldgear$Bottom.trawl)
 wrldgear.long<-wide_data %>%
-  pivot_longer(cols=c(Unknown.gear,other.gear,longline,gillnet,small.scale,purse.seine,pelagic.trawl,bottom.trawl),names_to = "Gear.Type",values_to = "Count")
- ggplot(wrldgear.long,aes(x=Year,y=Count,fill=Gear.Type)) + geom_area(position= "fill")+labs(title="Fish Catch by Gear Type over time", y= "Proportions", fill= " Gear Type")+scale_fill_brewer(palette="Set2")+xlim(1974,2018)
+  pivot_longer(cols=c(Unknown.Gear, other.gear,longline,gillnet,small.scale,purse.seine,pelagic.trawl,bottom.trawl),names_to = "Gear.Type",values_to = "Count")
+ ggplot(wrldgear.long,aes(x=Year,y=Count,fill=Gear.Type)) + geom_area(position= "fill")+labs(title="Fish Catch by Gear Type over time", y= "Proportions", fill= " Gear Type")+xlim(1974,2018)+ scale_fill_discrete(name="Gear Type", labels= c("Bottom Trawl", "Gillnet"," Longline", "Other Gear", "Pelagic Trawl", "Purse Seine", "Small Scale", "Unknown Gear"))
 ```
 
 ```{r}
@@ -25,15 +25,15 @@ fractions<- wrldgear.long %>%
   pivot_wider(names_from = "Gear.Type", values_from = "Proportion")
 fractions<-fractions[25:69,]
 wrldstocks2<-wrldstocks[1:45,]
-fractions$biologically.sustainable<- wrldstocks2$Biologically.sustainable
-
+fractions$Biologically.Sustainable<- wrldstocks2$Biologically.sustainable
+colnames(fractions)<- c("Year", "Unknown Gear", "Other Gear", "Longline", "Gillnet","Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl", "Biologically Sustainable")
 ```
 
 ```{r}
 response_var<-names(fractions)[ncol(fractions)]
 fractions.for.plot<- fractions %>%
   pivot_longer( cols= -c( Year, all_of(response_var)), names_to = "Predictor", values_to= "Value") %>%
-  ggplot(aes(x= Value, y= .data[[response_var]])) + geom_point(alpha= 0.5)+geom_smooth(method="lm", se= TRUE, color="black")+facet_wrap(~Predictor, scales= "free_x")+ labs(x= "Predictor Value", y= response_var, title= "Regression of Each Gear Type Against Proportion of Fish Stocks Classified as Biologically Sustainable")+ theme(plot.title = element_text(size=7.5), plot.margin = margin(15,10,10,10 ))
+  ggplot(aes(x= Value, y= .data[[response_var]])) + geom_point(alpha= 0.5)+geom_smooth(method="lm", se= TRUE, color="black")+facet_wrap(~Predictor, scales= "free_x")+ labs(x= "Predictor Value", y= response_var, title= "Regression of Each Gear Type Against Proportion of Fish Stocks Classified as Biologically Sustainable")+ theme(plot.title = element_text(size=7.5), plot.margin = margin(15,5,10,10 ), axis.text.x = element_text(angle=90, vjust=1, hjust=1, size=5))
 print(fractions.for.plot)
 ```
 
