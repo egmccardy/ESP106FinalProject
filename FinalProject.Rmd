@@ -17,6 +17,8 @@ wrldgear.long<-wide_data %>%
 ```
 
 ```{r}
+wrldstocks<- data.frame(fish.stocks.within.sustainable.levels)
+wrldstocks<- filter(wrldstocks, Entity == "World")
 fractions<- wrldgear.long %>%
   group_by(Year)%>%
   mutate(Proportion= Count/sum(Count, na.rm=TRUE)) %>%
