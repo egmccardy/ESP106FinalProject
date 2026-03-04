@@ -16,6 +16,30 @@ wrldgear.long<-wide_data %>%
  ggplot(wrldgear.long,aes(x=Year,y=Count,fill=Gear.Type)) + geom_area(position= "fill")+labs(title="Fish Catch by Gear Type over time", y= "Proportions", fill= " Gear Type")+xlim(1974,2018)+ scale_fill_discrete(name="Gear Type", labels= c("Bottom Trawl", "Gillnet"," Longline", "Other Gear", "Pelagic Trawl", "Purse Seine", "Small Scale", "Unknown Gear"))
 ```
 
+```{r question biologically sustianable}
+library(tidyverse)
+library(ggplot2)
+stock_sust <- read.csv("~/GitHub/ESP106FinalProject/fish-stocks-within-sustainable-levels/fish-stocks-within-sustainable-levels.csv")
+stock_sustdf <- data.frame(stock_sust)
+wrld_sust <- filter(stock_sustdf, Entity == "World")
+
+wrld_sust_long <- wrld_sust %>%
+  pivot_longer(
+    cols = c(Overexploited, Biologically.sustainable),
+    names_to = "Status",
+    values_to = "Value"
+  )
+
+ggplot(wrld_sust_long,
+       aes(x = Year, y = Value, fill = Status)) +
+  geom_area(position = "fill") +
+  labs(
+    title = "Sustainable vs. Overexploited Fish Stocks Worldwide",
+    fill = "Status"
+  ) +
+  scale_x_continuous(limits = c(1974, 2018))
+```
+
 ```{r}
 wrldstocks<- data.frame(fish.stocks.within.sustainable.levels)
 wrldstocks<- filter(wrldstocks, Entity == "World")
