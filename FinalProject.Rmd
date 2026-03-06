@@ -17,7 +17,8 @@ wrldgear.long<-wide_data %>%
 ```
 
 ```{r}
-wrldstocks<- data.frame(fish.stocks.within.sustainable.levels)
+fish.stock.sustainable<- read.csv("/cloud/project/fish-stocks-within-sustainable-levels.csv")
+wrldstocks<- data.frame(fish.stock.sustainable)
 wrldstocks<- filter(wrldstocks, Entity == "World")
 fractions<- wrldgear.long %>%
   group_by(Year)%>%
@@ -37,5 +38,24 @@ fractions.for.plot<- fractions %>%
   pivot_longer( cols= -c( Year, all_of(response_var)), names_to = "Predictor", values_to= "Value") %>%
   ggplot(aes(x= Value, y= .data[[response_var]])) + geom_point(alpha= 0.5)+geom_smooth(method="lm", se= TRUE, color="black")+facet_wrap(~Predictor, scales= "free_x")+ labs(x= "Predictor Value", y= response_var, title= "Regression of Each Gear Type Against Proportion of Fish Stocks Classified as Biologically Sustainable")+ theme(plot.title = element_text(size=7.5), plot.margin = margin(15,5,10,10 ), axis.text.x = element_text(angle=90, vjust=1, hjust=1, size=5))
 print(fractions.for.plot)
+```
+
+```{r }
+library(countries)
+ fish.stock.sustainable.2018<- filter(fish.stock.sustainable[,-5], Year == "2018")
+ fish.stock.sustainable.2018<- fish.stock.sustainable.2018[-55,-3]
+quick_map(data= fish.stock.sustainable.2018, plot_col = "Biologically.sustainable" )
+```
+
+```{r}
+gear.2018<- filter(geartypesdf, Year == "2018")
+gear.2018<-gear.2018[,-3]
+colnames(gear.2018)<- c("Entity", "Code", " Unknown Gear", "Other Gear", "Longline", "Gillnet", "Small Scale", " Purse Seine", "Pelagic Trawl", "Bottom Trawl" )
+gear.max<- apply(gear.2018, 1, function(x) colnames(gear.2018)[which.max(x)])
+gear.max.df<- data.frame(gear.max)
+gear.max.df$country<- gear.2018$Entity
+colnames(gear.max.df)<- c("Most Used Gear", "Country")
+quick_map(data= gear.max.df, plot_col= "Most Used Gear")
+
 ```
 
