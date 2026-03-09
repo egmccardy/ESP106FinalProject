@@ -61,3 +61,15 @@ quick_map(data= gear.max.df, plot_col= "Most Used Gear")
 
 ```
 
+```{r}
+fish.caught.df<- filter(geartypesdf, Year == "2018")
+fish.caught.df<- fish.caught.df[, -3]
+fish.caught.df$total.catch<- rowSums(fish.caught.df[,c("Unknown.gear", "Other.gear", "Longline", "Gillnet", "Purse.seine", "Small.scale", "Pelagic.trawl", "Bottom.trawl")], na.rm= TRUE)
+fish.caught.total<- fish.caught.df[,-c(3:10)]
+colnames(fish.caught.total)<- c("Entity", "Code", "Total Catch")
+fish.caught.total<- fish.caught.total[-197,]
+fish.caught.total<- fish.caught.total %>%
+  arrange(desc(`Total Catch`))
+head(fish.caught.total)
+```
+
