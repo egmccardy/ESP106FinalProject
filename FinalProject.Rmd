@@ -20,15 +20,15 @@ wrldgear.long<-wide_data %>%
 fish.stock.sustainable<- read.csv("/cloud/project/fish-stocks-within-sustainable-levels.csv")
 wrldstocks<- data.frame(fish.stock.sustainable)
 wrldstocks<- filter(wrldstocks, Entity == "World")
-fractions<- wrldgear.long %>%
-  group_by(Year)%>%
-  mutate(Proportion= Count/sum(Count, na.rm=TRUE)) %>%
-  ungroup() %>%
-  select(-Count)%>%
-  pivot_wider(names_from = "Gear.Type", values_from = "Proportion")
-fractions<-fractions[25:69,]
-wrldstocks2<-wrldstocks[1:45,]
-fractions$Biologically.Sustainable<- wrldstocks2$Biologically.sustainable
+colnames(wrldstocks)<- c( "Entity", "Code", "Year", "Proportion1", "Proportion")
+wrldstocks$Proportion<- wrldstocks$Proportion1/100
+wrldstocks<- wrldstocks[,-c(1,2,4)]
+fractions<-wide_data[25:69,]%>%
+  rowwise()%>%
+  mutate(across(Unknown.Gear:bottom.trawl, ~./sum(c_across(Unknown.Gear:bottom.trawl))))%>%
+  ungroup()
+wrldstocks2<- wrldstocks[1:45,]
+fractions$Biologically.Sustainable<- wrldstocks2$Proportion
 colnames(fractions)<- c("Year", "Unknown Gear", "Other Gear", "Longline", "Gillnet","Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl", "Biologically Sustainable")
 ```
 
@@ -42,9 +42,10 @@ print(fractions.for.plot)
 
 ```{r }
 library(countries)
- fish.stock.sustainable.2018<- filter(fish.stock.sustainable[,-5], Year == "2018")
- fish.stock.sustainable.2018<- fish.stock.sustainable.2018[-55,-3]
-quick_map(data= fish.stock.sustainable.2018, plot_col = "Biologically.sustainable" )
+ fish.stock.sustainable.2018<- filter(data.frame(fish.stock.sustainable), Year == "2018")
+ fish.stock.sustainable.2018<- fish.stock.sustainable.2018[-55,-c(3,5)]
+ colnames(fish.stock.sustainable.2018)<- c("Entity", "Code", "Proportion Biologically Sustaianble")
+quick_map(data= fish.stock.sustainable.2018, plot_col = "Proportion Biologically Sustaianble")
 ```
 
 ```{r}
@@ -54,7 +55,8 @@ colnames(gear.2018)<- c("Entity", "Code", " Unknown Gear", "Other Gear", "Longli
 gear.max<- apply(gear.2018, 1, function(x) colnames(gear.2018)[which.max(x)])
 gear.max.df<- data.frame(gear.max)
 gear.max.df$country<- gear.2018$Entity
-colnames(gear.max.df)<- c("Most Used Gear", "Country")
+gear.max.df$Code<- gear.2018$Code
+colnames(gear.max.df)<- c("Most Used Gear", "Country", "Code")
 quick_map(data= gear.max.df, plot_col= "Most Used Gear")
 
 ```
