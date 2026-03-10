@@ -81,6 +81,7 @@ head(fish.caught.total)
 ```
 
 ```{r statistical test}
+options(scipen = 0, digits= 7)
 gear.cols<- c("Unknown Gear", "Other Gear", "Longline", "Gillnet", "Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl")
 results<- do.call(rbind, lapply(gear.cols, function(gear){
   test<- cor.test(fractions[[gear]], fractions$`Biologically Sustainable`)
@@ -89,11 +90,12 @@ results<- do.call(rbind, lapply(gear.cols, function(gear){
     r       = round(test$estimate, 3),
     t       = round(test$statistic, 3),
     df      = test$parameter,
-    p.value = round(test$p.value, 4)
+    p.value = test$p.value, 4
    )
 }))
 rownames(results)<- c("Unknown Gear", "Other Gear", "Longline", "Gillnet", "Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl")
-results<- results[,-1]
+results<- results[,-c(1,6)]
 results$Significant<- ifelse(results$p.value<0.05, "Yes", "No")
+results$p.value<- format(results$p.value, scientific = TRUE, digits= 3)
 ```
 
