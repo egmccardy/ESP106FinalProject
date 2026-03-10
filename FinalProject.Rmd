@@ -74,10 +74,21 @@ head(fish.caught.total)
 ```
 
 ```{r chi-squared test}
-fractions.for.test<- filter(fractions, Year == "2018")
-fractions.for.test<- fractions.for.test[,-1]
-fish.stock.fractions.for.test<- filter(data.frame(fish.stock.sustainable), Year == "2018", Entity == "World")
-fish.stock.fractions.for.test<- fish.stock.fractions.for.test[,c(1,4)]
-fish.stock.fractions.for.test$Biologically.sustainable<- fish.stock.fractions.for.test$Biologically.sustainable/100
+bottom.trawl.correlation<- cor.test(fractions$`Bottom Trawl`, fractions$`Biologically Sustainable`, method= "pearson")
+print(bottom.trawl.correlation)
+Unknown.gear.corr<- cor.test(fractions$`Unknown Gear`, fractions$`Biologically Sustainable`, method= "pearson")
+print(Unknown.gear.corr)
+other.gear.correlation<- cor.test(fractions$`Other Gear`, fractions$`Biologically Sustainable`, method= "pearson")
+print(other.gear.correlation)
+longline.corr<- cor.test(fractions$Longline, fractions$`Biologically Sustainable`, method= "pearson")
+print(longline.corr)
+gillnet.corr<- cor.test(fractions$Gillnet, fractions$`Biologically Sustainable`, method= "pearson")
+print(gillnet.corr)
+small.scale.corr<- cor.test(fractions$`Small Scale`, fractions$`Biologically Sustainable`, method= "pearson")
+print(small.scale.corr)
+purse.seine.corr<- cor.test(fractions$`Purse Seine`, fractions$`Biologically Sustainable`, method= "pearson")
+print(purse.seine.corr)
+pelagic.trawl.corr<- cor.test(fractions$`Pelagic Trawl`, fractions$`Biologically Sustainable`, method= "pearson")
+print(pel)
 ```
 
