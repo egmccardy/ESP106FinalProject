@@ -7,21 +7,35 @@ editor_options:
 ```{r question geartypes}
 library(tidyverse)
 library(ggplot2)
-geartypes<-read.csv("/cloud/project/fish-catch-gear-type.csv")
+
+geartypes<-read.csv("~/GitHub/ESP106FinalProject/fish-catch-gear-type.csv")
 geartypesdf<-data.frame(geartypes)
 wrldgear<-filter(geartypesdf,Entity=="World")
+
 wide_data<- data.frame(Year=wrldgear$Year,Unknown.Gear=wrldgear$Unknown.gear,other.gear=wrldgear$Other.gear,longline=wrldgear$Longline,gillnet=wrldgear$Gillnet,small.scale=wrldgear$Small.scale,purse.seine=wrldgear$Purse.seine,pelagic.trawl=wrldgear$Pelagic.trawl,bottom.trawl=wrldgear$Bottom.trawl)
+
 wrldgear.long<-wide_data %>%
-  pivot_longer(cols=c(Unknown.Gear, other.gear,longline,gillnet,small.scale,purse.seine,pelagic.trawl,bottom.trawl),names_to = "Gear.Type",values_to = "Count")
- ggplot(wrldgear.long,aes(x=Year,y=Count,fill=Gear.Type)) + geom_area(position= "fill")+labs(title="Fish Catch by Gear Type over time", y= "Proportions", fill= " Gear Type")+xlim(1974,2018)+ scale_fill_discrete(name="Gear Type", labels= c("Bottom Trawl", "Gillnet"," Longline", "Other Gear", "Pelagic Trawl", "Purse Seine", "Small Scale", "Unknown Gear"))
+  filter(Year >= 1974 & Year <= 2018) %>%
+  pivot_longer(cols=c(Unknown.Gear,other.gear,longline,gillnet,small.scale,purse.seine,pelagic.trawl,bottom.trawl),
+               names_to = "Gear.Type",values_to = "Count")
+ ggplot(wrldgear.long,aes(
+   x=Year,y=Count,fill=Gear.Type)) + 
+   geom_area(position= "fill") + 
+   labs(
+     title="Fish Catch by Gear Type over time", 
+     y= "Proportions", fill= " Gear Type") + 
+   xlim(1974,2018) + 
+   scale_fill_discrete(name="Gear Type", labels= c("Bottom Trawl", "Gillnet"," Longline", "Other Gear", "Pelagic Trawl", "Purse Seine", "Small Scale", "Unknown Gear"))
 ```
 
-```{r question biologically sustianable}
+```{r questionbiologically sustianable}
 library(tidyverse)
 library(ggplot2)
-stock_sust <- read.csv("~/GitHub/ESP106FinalProject/fish-stocks-within-sustainable-levels/fish-stocks-within-sustainable-levels.csv")
+
+stock_sust <- read.csv("~/GitHub/ESP106FinalProject/fish-stocks-within-sustainable-levels.csv")
 stock_sustdf <- data.frame(stock_sust)
-wrld_sust <- filter(stock_sustdf, Entity == "World")
+wrld_sust <- filter(stock_sustdf, Entity == "World")%>% 
+  filter(Year >= 1974 & Year <= 2018)
 
 wrld_sust_long <- wrld_sust %>%
   pivot_longer(
@@ -40,26 +54,111 @@ ggplot(wrld_sust_long,
   scale_x_continuous(limits = c(1974, 2018))
 ```
 
-```{r}
-wrldstocks<- data.frame(fish.stocks.within.sustainable.levels)
-wrldstocks<- filter(wrldstocks, Entity == "World")
+```{r question data wrangling}
 fractions<- wrldgear.long %>%
   group_by(Year)%>%
   mutate(Proportion= Count/sum(Count, na.rm=TRUE)) %>%
   ungroup() %>%
   select(-Count)%>%
   pivot_wider(names_from = "Gear.Type", values_from = "Proportion")
+
+##df_range <- wrldgear.long %>%
+  ##filter(year(Year) >= 2015 & year(Year) <= 2018)crop
+
 fractions<-fractions[25:69,]
-wrldstocks2<-wrldstocks[1:45,]
-fractions$Biologically.Sustainable<- wrldstocks2$Biologically.sustainable
+
+wrldsust2<-wrld_sust[1:45,]
+
+fractions$Biologically.Sustainable<- wrldsust2$Biologically.sustainable
+
 colnames(fractions)<- c("Year", "Unknown Gear", "Other Gear", "Longline", "Gillnet","Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl", "Biologically Sustainable")
 ```
 
-```{r}
+```{r question regression for each gear type}
 response_var<-names(fractions)[ncol(fractions)]
+
 fractions.for.plot<- fractions %>%
   pivot_longer( cols= -c( Year, all_of(response_var)), names_to = "Predictor", values_to= "Value") %>%
-  ggplot(aes(x= Value, y= .data[[response_var]])) + geom_point(alpha= 0.5)+geom_smooth(method="lm", se= TRUE, color="black")+facet_wrap(~Predictor, scales= "free_x")+ labs(x= "Predictor Value", y= response_var, title= "Regression of Each Gear Type Against Proportion of Fish Stocks Classified as Biologically Sustainable")+ theme(plot.title = element_text(size=7.5), plot.margin = margin(15,5,10,10 ), axis.text.x = element_text(angle=90, vjust=1, hjust=1, size=5))
+  ggplot(aes(
+    x= Value, y= .data[[response_var]])) + 
+  geom_point(alpha= 0.5) + geom_smooth(method="lm", se= TRUE, color="black") + facet_wrap(~Predictor, scales= "free_x") + 
+  labs(
+    x= "Predictor Value", 
+    y= response_var, 
+    title= "Regression of Each Gear Type Against Proportion of Fish Stocks Classified as Biologically Sustainable") +
+  theme(plot.title = element_text(size=7.5), plot.margin = margin(15,5,10,10 ), axis.text.x = element_text(angle=90, vjust=1, hjust=1, size=5))
+
 print(fractions.for.plot)
 ```
+
+```{r question chi-squared test fr independence}
+#install.packages("dplyr")
+library(dplyr)
+library(tidyr)
+
+fractions_long <- fractions %>%
+  pivot_longer(
+    cols = c(Year, "Biologically Sustainable"),
+    names_to = "Gear.Type",
+    values_to = "Proportion"
+    )
+
+fractions_long <- fractions_long %>%
+  mutate(
+    Sustainability = ifelse("Biologically Sustainable" > 0.5,
+                            "Sustainable",
+                            "Overexploited"))
+contingency_table <- table(fractions_long$Gear.Type,
+                           fractions_long$Sustainability)
+chi_square_test <- chisq.test(contingency_table)
+print(chi_square_test)
+
+#plot chi test
+library(ggstatsplot)
+
+ggbarstats(
+  data = fractions_long,
+  x = "Sustainability",
+  y = "Gear.Type"
+) +
+  labs(caption = NULL) 
+
+```
+
+```{r}
+library(dplyr)
+library(tidyr)
+
+fractions_long <- fractions %>%
+  pivot_longer(
+    cols = -c(Year, `Biologically Sustainable`),
+    names_to = "Gear.Type",
+    values_to = "Proportion"
+  )
+
+fractions_long <- fractions_long %>%
+  mutate(
+    Sustainability = ifelse(`Biologically Sustainable` > 0.5,
+                            "Sustainable",
+                            "Overexploited")
+  )
+
+contingency_table <- table(fractions_long$Gear.Type,
+                           fractions_long$Sustainability)
+
+chi_square_test <- chisq.test(contingency_table)
+
+print(chi_square_test)
+
+#plot chi test
+library(ggstatsplot)
+
+ggbarstats(
+  data = fractions_long,
+  x = Sustainability,
+  y = Gear.Type
+) +
+  labs(caption = NULL)
+```
+
 
