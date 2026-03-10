@@ -92,13 +92,13 @@ print(fractions.for.plot)
 ```
 
 ```{r question chi-squared test fr independence}
-#install.packages("dplyr")
 library(dplyr)
 library(tidyr)
+library(ggplot2)
 
 fractions_long <- fractions %>%
   pivot_longer(
-    cols = c(Year, "Biologically Sustainable"),
+    cols = -c(Year, `Biologically Sustainable`),
     names_to = "Gear.Type",
     values_to = "Proportion"
     )
@@ -113,52 +113,13 @@ contingency_table <- table(fractions_long$Gear.Type,
 chi_square_test <- chisq.test(contingency_table)
 print(chi_square_test)
 
-#plot chi test
-library(ggstatsplot)
-
-ggbarstats(
-  data = fractions_long,
-  x = "Sustainability",
-  y = "Gear.Type"
-) +
-  labs(caption = NULL) 
-
+#create chi plot
+ggplot(fractions_long, aes(x = Gear.Type, y = Proportion, fill = Sustainability)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(
+    title = "Gear Type vs Sustainability",
+    x = "Gear Type",
+    y = "Proportion"
+  ) +
+  theme_minimal()
 ```
-
-```{r}
-library(dplyr)
-library(tidyr)
-
-fractions_long <- fractions %>%
-  pivot_longer(
-    cols = -c(Year, `Biologically Sustainable`),
-    names_to = "Gear.Type",
-    values_to = "Proportion"
-  )
-
-fractions_long <- fractions_long %>%
-  mutate(
-    Sustainability = ifelse(`Biologically Sustainable` > 0.5,
-                            "Sustainable",
-                            "Overexploited")
-  )
-
-contingency_table <- table(fractions_long$Gear.Type,
-                           fractions_long$Sustainability)
-
-chi_square_test <- chisq.test(contingency_table)
-
-print(chi_square_test)
-
-#plot chi test
-library(ggstatsplot)
-
-ggbarstats(
-  data = fractions_long,
-  x = Sustainability,
-  y = Gear.Type
-) +
-  labs(caption = NULL)
-```
-
-
