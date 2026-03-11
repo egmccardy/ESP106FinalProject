@@ -62,9 +62,6 @@ fractions<- wrldgear.long %>%
   select(-Count)%>%
   pivot_wider(names_from = "Gear.Type", values_from = "Proportion")
 
-##df_range <- wrldgear.long %>%
-  ##filter(year(Year) >= 2015 & year(Year) <= 2018)crop
-
 fractions<-fractions[25:69,]
 
 wrldsust2<-wrld_sust[1:45,]
@@ -91,35 +88,3 @@ fractions.for.plot<- fractions %>%
 print(fractions.for.plot)
 ```
 
-```{r question chi-squared test fr independence}
-library(dplyr)
-library(tidyr)
-library(ggplot2)
-
-fractions_long <- fractions %>%
-  pivot_longer(
-    cols = -c(Year, `Biologically Sustainable`),
-    names_to = "Gear.Type",
-    values_to = "Proportion"
-    )
-
-fractions_long <- fractions_long %>%
-  mutate(
-    Sustainability = ifelse("Biologically Sustainable" > 0.5,
-                            "Sustainable",
-                            "Overexploited"))
-contingency_table <- table(fractions_long$Gear.Type,
-                           fractions_long$Sustainability)
-chi_square_test <- chisq.test(contingency_table)
-print(chi_square_test)
-
-#create chi plot
-ggplot(fractions_long, aes(x = Gear.Type, y = Proportion, fill = Sustainability)) +
-  geom_bar(stat = "identity", position = "dodge") +
-  labs(
-    title = "Gear Type vs Sustainability",
-    x = "Gear Type",
-    y = "Proportion"
-  ) +
-  theme_minimal()
-```
