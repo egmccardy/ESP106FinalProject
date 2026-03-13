@@ -1,38 +1,47 @@
 ---
 title: "FinalProject"
-output: html_document
-editor_options: 
+output:
+  pdf_document: default
+  html_document: default
+editor_options:
   chunk_output_type: console
 ---
 ```{r question geartypes}
 library(tidyverse)
 library(ggplot2)
+# Reading in the gear data
 geartypes<-read.csv("/cloud/project/fish-catch-gear-type.csv")
 geartypesdf<-data.frame(geartypes)
 wrldgear0<-filter(geartypesdf,Entity=="World")
 wide_data<- data.frame(Year=wrldgear0$Year,Unknown.Gear=wrldgear0$Unknown.gear,other.gear=wrldgear0$Other.gear,longline=wrldgear0$Longline,gillnet=wrldgear0$Gillnet,small.scale=wrldgear0$Small.scale,purse.seine=wrldgear0$Purse.seine,pelagic.trawl=wrldgear0$Pelagic.trawl,bottom.trawl=wrldgear0$Bottom.trawl)
+# Converting the data frame to long format in order to plot
 wrldgear.long<-wide_data %>%
   pivot_longer(cols=c(Unknown.Gear, other.gear,longline,gillnet,small.scale,purse.seine,pelagic.trawl,bottom.trawl),names_to = "Gear.Type",values_to = "Count")
+# Code for the gear use over time plot
  ggplot(wrldgear.long,aes(x=Year,y=Count,fill=Gear.Type)) + geom_area(position= "fill")+labs(title="Fish Catch by Gear Type over time", y= "Proportions", fill= " Gear Type")+xlim(1974,2018)+ scale_fill_discrete(name="Gear Type", labels= c("Bottom Trawl", "Gillnet"," Longline", "Other Gear", "Pelagic Trawl", "Purse Seine", "Small Scale", "Unknown Gear"))
 ```
 
 ```{r}
+# Reading in the data on fish stock classifications
 fish.stock.sustainable<- read.csv("/cloud/project/fish-stocks-within-sustainable-levels.csv")
 wrldstocks0<- data.frame(fish.stock.sustainable)
 wrldstocks<- filter(wrldstocks0, Entity == "World")
 colnames(wrldstocks)<- c( "Entity", "Code", "Year", "Proportion1", "Proportion")
 wrldstocks$Proportion<- wrldstocks$Proportion1/100
 wrldstocks<- wrldstocks[,-c(1,2,4)]
+# Converting the counts into proportions
 fractions<-wide_data[25:69,]%>%
   rowwise()%>%
   mutate(across(Unknown.Gear:bottom.trawl, ~./sum(c_across(Unknown.Gear:bottom.trawl))))%>%
   ungroup()
 wrldstocks2<- wrldstocks0[1:45,]
+# Establishing a data frame with gear and fish stock classifications proportions worldwide
 fractions$Biologically.Sustainable<- wrldstocks2$Proportion
 colnames(fractions)<- c("Year", "Unknown Gear", "Other Gear", "Longline", "Gillnet","Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl", "Biologically Sustainable")
 ```
 
 ```{r}
+# plotting the proportion of fish stocks classified as biologically sustainable by country in 2018
 library(countries)
  fish.stock.sustainable.2018<- filter(data.frame(fish.stock.sustainable), Year == "2018")
  fish.stock.sustainable.2018<- fish.stock.sustainable.2018[-55,-c(3,5)]
@@ -41,7 +50,8 @@ quick_map(data= fish.stock.sustainable.2018, plot_col = "Proportion Biologically
 ```
 
 
-```{r}
+```{r warning= FALSE}
+# plotting most used gear by country in 2018
 gear.2018<- filter(geartypesdf, Year == "2018")
 gear.2018<-gear.2018[,-3]
 colnames(gear.2018)<- c("Entity", "Code", " Unknown Gear", "Other Gear", "Longline", "Gillnet", "Small Scale", " Purse Seine", "Pelagic Trawl", "Bottom Trawl" )
@@ -54,17 +64,21 @@ quick_map(data= gear.max.df, plot_col= "Most Used Gear", theme= "Greens")
 ```
 
 ```{r}
+# creating a data frame showing proportions by country of both gear used as classification of fish stocks
 wrldgear.countries<- filter(geartypesdf, Entity != "World")
 wrldgear.countries<- filter(wrldgear.countries, Year == "2018")
 wide_data2<- data.frame(Entity=wrldgear.countries$Entity, Unknown.Gear=wrldgear.countries$Unknown.gear,other.gear=wrldgear.countries$Other.gear,longline=wrldgear.countries$Longline,gillnet=wrldgear.countries$Gillnet,small.scale=wrldgear.countries$Small.scale,purse.seine=wrldgear.countries$Purse.seine,pelagic.trawl=wrldgear.countries$Pelagic.trawl,bottom.trawl=wrldgear.countries$Bottom.trawl)
+# Converting counts to fractions
 fractions2<-wide_data2%>%
   rowwise()%>%
   mutate(across(Unknown.Gear:bottom.trawl, ~./sum(c_across(Unknown.Gear:bottom.trawl), na.rm= TRUE)))%>%
   ungroup()
+# Merging the data on gear used and classifications of fish stocks into one data frame
 fractions3<- inner_join(fractions2, fish.stock.sustainable.2018, by= "Entity")
  fractions3<- fractions3[,-10]
  fractions3$`Proportion Biologically Sustainable`<- fractions3$`Proportion Biologically Sustaianble`/100
 colnames(fractions3)<- c("Entity","Unknown Gear", "Other Gear", "Longline", "Gillnet", "Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl", "Proportion Biologically Sustainable")
+# Running Pearson's Chi- Squared Test on gear type used in fishing against proportion of fish stocks classified as biologically sustainable.
 gear.cols2<- c("Unknown Gear", "Other Gear", "Longline", "Gillnet", "Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl")
 results2<- do.call(rbind, lapply(gear.cols2, function(gear){
   test<- cor.test(fractions3[[gear]], fractions3$`Proportion Biologically Sustainable`)
@@ -84,6 +98,7 @@ results2$p.value<- format(results2$p.value, scientific = TRUE, digits= 3)
 ```
 
 ```{r}
+# Constructing a linear regression of gear type against proportion of fish stocks classified as biologically sustainable.
 fractions3<- fractions3[,-c(1,10)]
 colnames(fractions3)<- c("Unknown Gear", "Other Gear", "Longline", "Gillnet","Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl", "Biologically Sustainable")
 response_var<-names(fractions3)[ncol(fractions3)]
@@ -97,6 +112,7 @@ print(fractions.for.plot)
 
 
 ```{r}
+# plotting the proportion of fish stocks classified as biologically sustainable by country in 2021
 fish.stock.sustainable.2021<- filter(data.frame(fish.stock.sustainable), Year == "2021")
  fish.stock.sustainable.2021<- fish.stock.sustainable.2021[-55,-c(3,5)]
  colnames(fish.stock.sustainable.2021)<- c("Entity", "Code", "Proportion Biologically Sustaianble")
@@ -104,6 +120,7 @@ quick_map(data= fish.stock.sustainable.2021, plot_col = "Proportion Biologically
 ```
 
 ```{r}
+#Identifying the countries with the highest total fish catch in 2018
 fish.caught.df<- filter(geartypesdf, Year == "2018")
 fish.caught.df<- fish.caught.df[, -3]
 fish.caught.df$total.catch<- rowSums(fish.caught.df[,c("Unknown.gear", "Other.gear", "Longline", "Gillnet", "Purse.seine", "Small.scale", "Pelagic.trawl", "Bottom.trawl")], na.rm= TRUE)
