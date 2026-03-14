@@ -46,7 +46,7 @@ library(countries)
  fish.stock.sustainable.2018<- filter(data.frame(fish.stock.sustainable), Year == "2018")
  fish.stock.sustainable.2018<- fish.stock.sustainable.2018[-55,-c(3,5)]
  colnames(fish.stock.sustainable.2018)<- c("Entity", "Code", "Proportion Biologically Sustaianble")
-quick_map(data= fish.stock.sustainable.2018, plot_col = "Proportion Biologically Sustaianble", theme= "Blues")
+quick_map(data= fish.stock.sustainable.2018, plot_col = "Proportion Biologically Sustaianble", theme= "Distinct")
 ```
 
 
@@ -60,7 +60,7 @@ gear.max.df<- data.frame(gear.max)
 gear.max.df$country<- gear.2018$Entity
 gear.max.df$Code<- gear.2018$Code
 colnames(gear.max.df)<- c("Most Used Gear", "Country", "Code")
-quick_map(data= gear.max.df, plot_col= "Most Used Gear", theme= "Greens")
+quick_map(data= gear.max.df, plot_col= "Most Used Gear", theme= "Distinct")
 ```
 
 ```{r}
@@ -116,7 +116,7 @@ print(fractions.for.plot)
 fish.stock.sustainable.2021<- filter(data.frame(fish.stock.sustainable), Year == "2021")
  fish.stock.sustainable.2021<- fish.stock.sustainable.2021[-55,-c(3,5)]
  colnames(fish.stock.sustainable.2021)<- c("Entity", "Code", "Proportion Biologically Sustaianble")
-quick_map(data= fish.stock.sustainable.2021, plot_col = "Proportion Biologically Sustaianble", theme= "Blues")
+quick_map(data= fish.stock.sustainable.2021, plot_col = "Proportion Biologically Sustaianble", theme= "Distinct")
 ```
 
 ```{r}
