@@ -6,11 +6,19 @@ output:
 editor_options:
   chunk_output_type: console
 ---
+```{r}
+# downloading the data files
+library(xfun)
+download_file(url = "https://raw.githubusercontent.com/egmccardy/ESP106FinalProject/refs/heads/main/fish-catch-gear-type.csv")
+download_file(url = "https://raw.githubusercontent.com/egmccardy/ESP106FinalProject/refs/heads/main/fish-stocks-within-sustainable-levels.csv")
+
+```
+
 ```{r question geartypes}
 library(tidyverse)
 library(ggplot2)
 # Reading in the gear data
-geartypes<-read.csv("/cloud/project/fish-catch-gear-type.csv")
+geartypes<-read.csv("fish-catch-gear-type.csv")
 geartypesdf<-data.frame(geartypes)
 wrldgear0<-filter(geartypesdf,Entity=="World")
 wide_data<- data.frame(Year=wrldgear0$Year,Unknown.Gear=wrldgear0$Unknown.gear,other.gear=wrldgear0$Other.gear,longline=wrldgear0$Longline,gillnet=wrldgear0$Gillnet,small.scale=wrldgear0$Small.scale,purse.seine=wrldgear0$Purse.seine,pelagic.trawl=wrldgear0$Pelagic.trawl,bottom.trawl=wrldgear0$Bottom.trawl)
@@ -23,7 +31,7 @@ wrldgear.long<-wide_data %>%
 
 ```{r}
 # Reading in the data on fish stock classifications
-fish.stock.sustainable<- read.csv("/cloud/project/fish-stocks-within-sustainable-levels.csv")
+fish.stock.sustainable<- read.csv("fish-stocks-within-sustainable-levels.csv")
 wrldstocks0<- data.frame(fish.stock.sustainable)
 wrldstocks<- filter(wrldstocks0, Entity == "World")
 colnames(wrldstocks)<- c( "Entity", "Code", "Year", "Proportion1", "Proportion")
@@ -38,6 +46,31 @@ wrldstocks2<- wrldstocks0[1:45,]
 # Establishing a data frame with gear and fish stock classifications proportions worldwide
 fractions$Biologically.Sustainable<- wrldstocks2$Proportion
 colnames(fractions)<- c("Year", "Unknown Gear", "Other Gear", "Longline", "Gillnet","Small Scale", "Purse Seine", "Pelagic Trawl", "Bottom Trawl", "Biologically Sustainable")
+```
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+# plotting a stacked 100% area chart of the proportion of fish stocks classified as biologically sustainable vs. overexploited over time.
+stock_sustdf <- data.frame(fish.stock.sustainable)
+wrld_sust <- filter(stock_sustdf, Entity == "World")%>% 
+  filter(Year >= 1974 & Year <= 2018)
+
+wrld_sust_long <- wrld_sust %>%
+  pivot_longer(
+    cols = c(Overexploited, Biologically.sustainable),
+    names_to = "Status",
+    values_to = "Value"
+  )
+
+ggplot(wrld_sust_long,
+       aes(x = Year, y = Value, fill = Status)) +
+  geom_area(position = "fill") +
+  labs(
+    title = "Sustainable vs. Overexploited Fish Stocks Worldwide",
+    fill = "Status"
+  ) +
+  scale_x_continuous(limits = c(1974, 2018))
 ```
 
 ```{r}
